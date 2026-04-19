@@ -317,35 +317,35 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 Run once in **Supabase → SQL Editor**:
 
 ```sql
-CREATE TABLE inventory (
+CREATE TABLE IF NOT EXISTS inventory (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id text NOT NULL, name text NOT NULL, category text,
   price numeric(6,2), unit text, grade text CHECK (grade IN ('A','B','C','D')),
   in_stock boolean DEFAULT true
 );
 
-CREATE TABLE unmet_demand_events (
+CREATE TABLE IF NOT EXISTS unmet_demand_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id text NOT NULL, product text NOT NULL,
   source text CHECK (source IN ('ai_gap','user_tap')),
   created_at timestamptz DEFAULT now()
 );
 
-CREATE TABLE store_demand_counts (
+CREATE TABLE IF NOT EXISTS store_demand_counts (
   store_id text, product text, count_7d int DEFAULT 0,
   count_30d int DEFAULT 0, alert text CHECK (alert IN ('red','yellow','green')),
   updated_at timestamptz DEFAULT now(), PRIMARY KEY (store_id, product)
 );
 
-CREATE TABLE tract_sessions (
+CREATE TABLE IF NOT EXISTS tract_sessions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tract_geoid text NOT NULL, ward int,
   nearest_store_miles numeric(5,3), nearest_store_id text,
   session_date date NOT NULL DEFAULT current_date,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX ON tract_sessions (tract_geoid);
-CREATE INDEX ON tract_sessions (session_date);
+CREATE INDEX IF NOT EXISTS idx_tract_sessions_geoid ON tract_sessions (tract_geoid);
+CREATE INDEX IF NOT EXISTS idx_tract_sessions_date ON tract_sessions (session_date);
 ```
 
 ### Run
