@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --teal: #1A7A6E;
+  --gold: #C07A00;
+  --red: #C0392B;
+  --green: #1E7A3A;
+  --bg: #F5F0E8;
+  --text: #2C2C2C;
+}
+
+body {
+  color: var(--text);
+  background: var(--bg);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer utilities {
+  .safe-top {
+    padding-top: max(1.5rem, env(safe-area-inset-top));
+  }
+  .safe-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+}
