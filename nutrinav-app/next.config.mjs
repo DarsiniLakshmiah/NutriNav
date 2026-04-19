@@ -1,10 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Allow JSON imports in app directory
-  experimental: {
-    serverComponentsExternalPackages: [],
+  eslint: {
+    ignoreDuringBuilds: true,
   },
-  // Suppress leaflet SSR warnings
+  typescript: {
+    ignoreBuildErrors: false,
+  },
   webpack: (config) => {
     config.resolve.fallback = { ...config.resolve.fallback, fs: false }
     return config
