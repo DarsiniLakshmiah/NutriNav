@@ -10,7 +10,7 @@ export interface InventoryItem {
 
 // Real Healthy Corners product catalog — Fall 2024 prices from DCCK
 // Source: Healthy Corners OSSE presentation, Fall 2024 price list
-const HC_PRODUCTS: Omit<InventoryItem, 'storeId' | 'inStock'>[] = [
+export const HC_PRODUCTS: Omit<InventoryItem, 'storeId' | 'inStock'>[] = [
   // Fruits
   { name: 'Apple',                    category: 'fruit',     price: 0.50, unit: 'ea',    grade: 'A' },
   { name: 'Applesauce',               category: 'fruit',     price: 0.50, unit: 'ea',    grade: 'A' },

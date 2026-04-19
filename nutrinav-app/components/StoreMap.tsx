@@ -49,6 +49,26 @@ export default function StoreMap({ stores, userLat, userLng, selectedStore, onSe
 
       stores.forEach(store => {
         const color = tierColors[store.tier ?? 'red']
+        const dest = encodeURIComponent(`${store.name}, ${store.address}`)
+        const transitUrl = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=transit`
+        const walkUrl    = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=walking`
+        const popupHtml = `
+          <div style="min-width:160px">
+            <b style="font-size:13px">${store.name}</b>
+            <br><span style="font-size:11px;color:#666">${store.address}</span>
+            <br><span style="font-size:11px;color:#666">Ward ${store.ward ?? '—'} · ${store.distance?.toFixed(2) ?? '?'} mi</span>
+            <div style="margin-top:8px;display:flex;gap:6px">
+              <a href="${transitUrl}" target="_blank" rel="noopener noreferrer"
+                style="flex:1;text-align:center;font-size:11px;font-weight:600;padding:5px 8px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">
+                🚌 Transit
+              </a>
+              <a href="${walkUrl}" target="_blank" rel="noopener noreferrer"
+                style="flex:1;text-align:center;font-size:11px;font-weight:600;padding:5px 8px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none">
+                🚶 Walk
+              </a>
+            </div>
+          </div>`
+
         const marker = L.circleMarker([store.lat, store.lng], {
           radius: 7,
           color,
@@ -57,7 +77,7 @@ export default function StoreMap({ stores, userLat, userLng, selectedStore, onSe
           weight: 2,
         })
           .addTo(map)
-          .bindPopup(`<b>${store.name}</b><br>${store.address}`)
+          .bindPopup(popupHtml, { maxWidth: 220 })
 
         if (onSelectStore) {
           marker.on('click', () => onSelectStore(store))

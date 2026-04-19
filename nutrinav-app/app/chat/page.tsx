@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import ChatBubble from '@/components/ChatBubble'
 import { MicButton } from '@/components/MicButton'
 import DisclaimerModal from '@/components/DisclaimerModal'
-import { CartItem } from '@/components/ShoppingList'
+import { CartItem } from '@/lib/cart'
+import { getCart, saveCart, addToCart as addToCartStore, removeFromCart as removeFromCartStore } from '@/lib/cart'
 import { speak } from '@/lib/tts'
 import { InventoryItem } from '@/lib/synthetic-data'
 import { sumNutrition } from '@/lib/nutrition'
@@ -30,36 +31,36 @@ function ChatContent() {
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [missingItems, setMissingItems] = useState<string[]>([])
   const [pendingTaps, setPendingTaps] = useState<string[]>([])
+  const [requestInput, setRequestInput] = useState('')
+  const [requestedItems, setRequestedItems] = useState<string[]>([])
   const [disclaimer, setDisclaimer] = useState(false)
   const [detectedLang, setDetectedLang] = useState('en')
   const [ttsEnabled, setTtsEnabled] = useState(false)
   const [showCart, setShowCart] = useState(false)
 
-  // Persistent cart: Map<itemName, CartItem> — never reset between messages
-  const [cartMap, setCartMap] = useState<Map<string, CartItem>>(new Map())
+  // Persistent cart backed by sessionStorage — shared with HC App catalog
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
 
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  const cartItems = Array.from(cartMap.values())
-  const cartItemNames = new Set(cartMap.keys())
+  const cartItemNames = new Set(cartItems.map(i => i.name))
   const cartCount = cartItems.length
   const cartTotal = cartItems.reduce((s, i) => s + i.unitPrice * i.qty, 0)
   const cartNutrition = sumNutrition(cartItems.map(i => ({ name: i.name, qty: i.qty })))
 
+  // Load cart from sessionStorage on mount (picks up items added in HC App)
+  useEffect(() => {
+    setCartItems(getCart())
+  }, [])
+
   const addToCart = (item: CartItem) => {
-    setCartMap(prev => {
-      const next = new Map(prev)
-      next.set(item.name, item)
-      return next
-    })
+    const updated = addToCartStore(item)
+    setCartItems([...updated])
   }
 
   const removeFromCart = (name: string) => {
-    setCartMap(prev => {
-      const next = new Map(prev)
-      next.delete(name)
-      return next
-    })
+    const updated = removeFromCartStore(name)
+    setCartItems([...updated])
   }
 
   useEffect(() => {
@@ -121,6 +122,18 @@ function ChatContent() {
     })
   }
 
+  const submitRequestedItem = async () => {
+    const item = requestInput.trim()
+    if (!item || requestedItems.includes(item.toLowerCase())) return
+    setRequestedItems(prev => [...prev, item.toLowerCase()])
+    setRequestInput('')
+    await fetch('/api/log-unmet-demand', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storeId, products: [item], source: 'user_tap' }),
+    })
+  }
+
   return (
     <main className="min-h-screen bg-[#F5F0E8] flex flex-col">
       {disclaimer && (
@@ -170,9 +183,10 @@ function ChatContent() {
           </div>
         )}
 
+        {/* AI-detected missing items */}
         {missingItems.length > 0 && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
-            <p className="text-xs font-semibold text-amber-800 mb-2">Anything missing from this list?</p>
+            <p className="text-xs font-semibold text-amber-800 mb-2">Items the AI needed but this store doesn't carry:</p>
             <div className="flex flex-wrap gap-2">
               {missingItems.map(item => (
                 <button
@@ -189,7 +203,48 @@ function ChatContent() {
               ))}
             </div>
             {pendingTaps.length > 0 && (
-              <p className="text-xs text-amber-600 mt-2">Thanks! Reported to the store owner.</p>
+              <p className="text-xs text-amber-600 mt-2">Reported to the store owner.</p>
+            )}
+          </div>
+        )}
+
+        {/* Persistent missing item request — always visible after first message */}
+        {messages.length > 1 && (
+          <div className="bg-white border border-gray-200 rounded-xl p-3 mb-3">
+            <p className="text-xs font-semibold text-gray-700 mb-2">
+              Want something this store doesn't have?
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={requestInput}
+                onChange={e => setRequestInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') submitRequestedItem() }}
+                placeholder="e.g. plantains, masa harina, scotch bonnet…"
+                className="flex-1 bg-[#F5F0E8] rounded-lg px-3 py-2 text-xs outline-none"
+              />
+              <button
+                onClick={submitRequestedItem}
+                disabled={!requestInput.trim()}
+                className="px-3 py-2 bg-[#1A7A6E] text-white rounded-lg text-xs font-semibold disabled:opacity-40"
+              >
+                Report
+              </button>
+            </div>
+            {requestedItems.length > 0 && (
+              <div className="mt-2">
+                <p className="text-xs text-gray-400 mb-1.5">Reported to store owner:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {requestedItems.map(item => (
+                    <span
+                      key={item}
+                      className="text-xs bg-green-50 text-green-700 border border-green-200 px-2.5 py-1 rounded-full capitalize"
+                    >
+                      ✓ {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -204,8 +259,8 @@ function ChatContent() {
             <button onClick={() => setShowCart(false)} className="text-gray-400 text-lg leading-none">×</button>
           </div>
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
-            {cartItems.map((item, i) => (
-              <div key={i} className="flex justify-between items-center text-sm">
+            {cartItems.map((item) => (
+              <div key={item.name} className="flex justify-between items-center text-sm">
                 <div className="flex items-center gap-2 min-w-0">
                   <button
                     onClick={() => removeFromCart(item.name)}

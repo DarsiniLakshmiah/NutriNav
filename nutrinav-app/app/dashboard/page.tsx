@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import DemandAlert from '@/components/DemandAlert'
 import storesData from '@/data/healthy-corners-stores.json'
 
@@ -23,6 +23,7 @@ const DEMO_DATA: DemandCount[] = [
 
 function DashboardContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [storeId, setStoreId] = useState(searchParams.get('storeId') ?? 'HC002')
   const [counts, setCounts] = useState<DemandCount[]>(DEMO_DATA)
   const [loading, setLoading] = useState(false)
@@ -48,9 +49,12 @@ function DashboardContent() {
   return (
     <main className="min-h-screen bg-[#F5F0E8] px-4 py-6">
       <div className="max-w-lg mx-auto">
-        <div className="mb-5">
-          <h1 className="text-2xl font-bold text-[#1A7A6E]">Demand Dashboard</h1>
-          <p className="text-sm text-gray-500">Items residents needed but couldn&apos;t find</p>
+        <div className="flex items-center gap-3 mb-5">
+          <button onClick={() => router.back()} className="text-[#1A7A6E] text-xl">←</button>
+          <div>
+            <h1 className="text-2xl font-bold text-[#1A7A6E]">Demand Dashboard</h1>
+            <p className="text-sm text-gray-500">Items residents needed but couldn&apos;t find</p>
+          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4">

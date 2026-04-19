@@ -1,14 +1,9 @@
 'use client'
 
 import { getNutrition } from '@/lib/nutrition'
+import { CartItem } from '@/lib/cart'
 
-export interface CartItem {
-  name: string
-  qty: number
-  unitPrice: number
-  unit: string
-  inCart: boolean
-}
+export type { CartItem }
 
 interface ShoppingListProps {
   text: string

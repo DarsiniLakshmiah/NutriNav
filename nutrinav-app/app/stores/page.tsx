@@ -18,17 +18,76 @@ function StoresContent() {
   const [selectedStore, setSelectedStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
   const [showMap, setShowMap] = useState(false)
+  const [showLocationSearch, setShowLocationSearch] = useState(false)
+  const [addressInput, setAddressInput] = useState('')
+  const [geocoding, setGeocoding] = useState(false)
+  const [geocodeError, setGeocodeError] = useState('')
 
   useEffect(() => {
     fetch(`/api/stores?lat=${lat}&lng=${lng}`)
       .then(r => r.json())
-      .then(data => { setStores(data); setLoading(false) })
+      .then((data: Store[]) => {
+        setStores(data)
+        setLoading(false)
+        // Fire-and-forget anonymous session log — never awaited, never blocks UI
+        if (data.length > 0) {
+          const nearest = data[0]
+          fetch('/api/log-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              lat,
+              lng,
+              nearestStoreMiles: nearest.distance ?? null,
+              nearestStoreId:    nearest.id,
+            }),
+          }).catch(() => {/* silent — logging must never break the app */})
+        }
+      })
   }, [lat, lng])
 
   const handleSelectStore = (store: Store) => {
     setSelectedStore(store)
     sessionStorage.setItem('nutrinav_store', JSON.stringify(store))
     router.push(`/chat?storeId=${store.id}&storeName=${encodeURIComponent(store.name)}&storeAddress=${encodeURIComponent(store.address)}`)
+  }
+
+  // Nominatim geocoding to change location
+  const handleAddressSearch = async () => {
+    const q = addressInput.trim()
+    if (!q) return
+    setGeocoding(true)
+    setGeocodeError('')
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ', Washington DC')}&format=json&limit=1&countrycodes=us`
+      const res = await fetch(url, {
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'NutriNav/1.0 (hackathon)' }
+      })
+      const data = await res.json()
+      if (data.length > 0) {
+        const { lat: newLat, lon: newLng } = data[0]
+        setShowLocationSearch(false)
+        setAddressInput('')
+        router.push(`/stores?lat=${newLat}&lng=${newLng}`)
+      } else {
+        setGeocodeError('Address not found. Try a different DC address.')
+      }
+    } catch {
+      setGeocodeError('Could not look up address. Please try again.')
+    } finally {
+      setGeocoding(false)
+    }
+  }
+
+  const useMyLocation = () => {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude, longitude } = pos.coords
+        setShowLocationSearch(false)
+        router.push(`/stores?lat=${latitude}&lng=${longitude}`)
+      },
+      () => setGeocodeError('Location denied. Enter an address instead.')
+    )
   }
 
   const nearest = stores[0]
@@ -39,17 +98,58 @@ function StoresContent() {
       <div className="max-w-lg mx-auto px-4 pt-6 pb-24">
         <div className="flex items-center gap-3 mb-5">
           <button onClick={() => router.push('/')} className="text-[#1A7A6E] text-xl">←</button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-xl font-bold text-[#1A7A6E]">Nearby Stores</h1>
             <p className="text-xs text-gray-500">Tap a store to plan your meals</p>
           </div>
           <button
+            onClick={() => setShowLocationSearch(v => !v)}
+            className="px-3 py-1.5 bg-white border border-gray-300 text-gray-600 rounded-lg text-xs font-medium"
+            title="Change location"
+          >
+            📍 Change
+          </button>
+          <button
             onClick={() => setShowMap(v => !v)}
-            className="ml-auto px-3 py-1.5 bg-white border border-[#1A7A6E] text-[#1A7A6E] rounded-lg text-sm font-medium"
+            className="px-3 py-1.5 bg-white border border-[#1A7A6E] text-[#1A7A6E] rounded-lg text-sm font-medium"
           >
             {showMap ? 'List' : '🗺 Map'}
           </button>
         </div>
+
+        {/* Change location panel */}
+        {showLocationSearch && (
+          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
+            <p className="text-sm font-semibold text-[#2C2C2C] mb-3">Search from a different location</p>
+            <p className="text-xs text-gray-400 mb-3">
+              Not at home? Shopping near work or school? Enter any DC address.
+            </p>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={addressInput}
+                onChange={e => setAddressInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddressSearch()}
+                placeholder="e.g. 2400 MLK Jr Ave SE, Ward 8"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#1A7A6E]"
+              />
+              <button
+                onClick={handleAddressSearch}
+                disabled={geocoding || !addressInput.trim()}
+                className="px-4 py-2 bg-[#1A7A6E] text-white rounded-lg text-sm font-semibold disabled:opacity-50"
+              >
+                {geocoding ? '…' : 'Go'}
+              </button>
+            </div>
+            {geocodeError && <p className="text-xs text-red-500 mb-2">{geocodeError}</p>}
+            <button
+              onClick={useMyLocation}
+              className="w-full text-sm text-[#1A7A6E] font-medium py-2 border border-[#1A7A6E]/30 rounded-lg"
+            >
+              📍 Use my current GPS location
+            </button>
+          </div>
+        )}
 
         {isDesert && (
           <div className="bg-red-50 border border-red-300 rounded-xl p-3 mb-4 text-sm text-red-700">

@@ -14,5 +14,20 @@
   {"tract":"11001010300","ward":8,"population":5890,"medianIncome":30200,"snapHouseholds":0.55,"lat":38.8501,"lng":-76.9712,"isDesert":true},
   {"tract":"11001010500","ward":8,"population":4123,"medianIncome":31500,"snapHouseholds":0.52,"lat":38.8523,"lng":-76.9834,"isDesert":false},
   {"tract":"11001007400","ward":7,"population":3789,"medianIncome":40300,"snapHouseholds":0.39,"lat":38.8945,"lng":-76.9712,"isDesert":false},
-  {"tract":"11001007100","ward":6,"population":8901,"medianIncome":68900,"snapHouseholds":0.12,"lat":38.8712,"lng":-76.9543,"isDesert":false}
+  {"tract":"11001007100","ward":6,"population":8901,"medianIncome":68900,"snapHouseholds":0.12,"lat":38.8712,"lng":-76.9543,"isDesert":false},
+
+  {"tract":"11001008301","ward":7,"population":5340,"medianIncome":31200,"snapHouseholds":0.53,"lat":38.8855,"lng":-76.9102,"isDesert":true},
+  {"tract":"11001008401","ward":7,"population":4780,"medianIncome":33500,"snapHouseholds":0.47,"lat":38.8820,"lng":-76.9045,"isDesert":true},
+  {"tract":"11001008501","ward":7,"population":6120,"medianIncome":29100,"snapHouseholds":0.59,"lat":38.8790,"lng":-76.8980,"isDesert":true},
+  {"tract":"11001008601","ward":7,"population":3670,"medianIncome":35800,"snapHouseholds":0.43,"lat":38.8950,"lng":-76.9055,"isDesert":true},
+  {"tract":"11001008701","ward":7,"population":4990,"medianIncome":30400,"snapHouseholds":0.57,"lat":38.8780,"lng":-76.9150,"isDesert":true},
+  {"tract":"11001010601","ward":8,"population":7230,"medianIncome":21800,"snapHouseholds":0.76,"lat":38.8290,"lng":-76.9910,"isDesert":true},
+  {"tract":"11001010701","ward":8,"population":5560,"medianIncome":23200,"snapHouseholds":0.71,"lat":38.8255,"lng":-77.0020,"isDesert":true},
+  {"tract":"11001010801","ward":8,"population":4890,"medianIncome":24600,"snapHouseholds":0.68,"lat":38.8210,"lng":-76.9980,"isDesert":true},
+  {"tract":"11001010901","ward":8,"population":6340,"medianIncome":20100,"snapHouseholds":0.79,"lat":38.8180,"lng":-76.9850,"isDesert":true},
+  {"tract":"11001011001","ward":8,"population":3980,"medianIncome":22400,"snapHouseholds":0.73,"lat":38.8145,"lng":-77.0050,"isDesert":true},
+  {"tract":"11001006501","ward":6,"population":4120,"medianIncome":45600,"snapHouseholds":0.28,"lat":38.8640,"lng":-76.9610,"isDesert":false},
+  {"tract":"11001006601","ward":6,"population":3890,"medianIncome":52300,"snapHouseholds":0.21,"lat":38.8700,"lng":-76.9480,"isDesert":false},
+  {"tract":"11001004801","ward":5,"population":5670,"medianIncome":48900,"snapHouseholds":0.31,"lat":38.9180,"lng":-76.9650,"isDesert":false},
+  {"tract":"11001004901","ward":5,"population":4320,"medianIncome":51200,"snapHouseholds":0.26,"lat":38.9220,"lng":-76.9720,"isDesert":false}
 ]
